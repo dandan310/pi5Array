@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>树莓派多角度摄影系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>多角度摄影系统</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status offline">离线</span>
+                <span id="camera-count">摄像头: 0/0</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- 主预览区域 -->
+            <section class="preview-section">
+                <div class="main-preview">
+                    <div id="preview-container">
+                        <img id="preview-image" src="" alt="摄像头预览" style="display: none;">
+                        <div id="preview-placeholder" class="placeholder">
+                            <p>选择摄像头开始预览</p>
+                        </div>
+                    </div>
+                    <div class="preview-controls">
+                        <button id="capture-btn" class="capture-button" disabled>
+                            <span class="capture-icon">📷</span>
+                            拍摄
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 摄像头选择区域 -->
+            <section class="camera-section">
+                <h2>摄像头列表</h2>
+                <div id="camera-grid" class="camera-grid">
+                    <!-- 摄像头卡片将通过JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 拍摄历史区域 -->
+            <section class="history-section">
+                <h2>拍摄历史</h2>
+                <div id="capture-history" class="capture-history">
+                    <p class="no-history">暂无拍摄记录</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="modal-image" src="" alt="查看图片">
+            <div class="modal-info">
+                <p id="modal-info-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载指示器 -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>处理中...</p>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="camera_viewer.js"></script>
+</body>
+</html>
