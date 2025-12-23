@@ -12,7 +12,7 @@ class CameraNodeConfig:
 @dataclass
 class MasterConfig:
     # 网络配置
-    master_ip: str = "192.168.1.100"
+    master_ip: str = "192.168.1.124"
     web_server_port: int = 8080
     websocket_port: int = 8081
     

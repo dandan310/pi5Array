@@ -4,6 +4,7 @@ import logging
 import time
 import socket
 import struct
+import subprocess
 from typing import Optional, List
 from datetime import datetime
 
@@ -23,6 +24,11 @@ class NTPClient:
         
     async def sync_time(self) -> bool:
         """同步时间"""
+        # 首先尝试使用系统的时间同步服务
+        if await self.sync_with_systemd():
+            return True
+        
+        # 如果系统同步失败，尝试手动NTP同步
         for server in self.servers:
             try:
                 ntp_time = await self.get_ntp_time(server)
@@ -39,6 +45,40 @@ class NTPClient:
                 continue
         
         self.logger.error("所有NTP服务器同步失败")
+        return False
+    
+    async def sync_with_systemd(self) -> bool:
+        """使用systemd-timesyncd同步时间"""
+        try:
+            # 触发systemd-timesyncd同步
+            result = subprocess.run(
+                ['systemctl', 'restart', 'systemd-timesyncd'],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode == 0:
+                # 等待同步完成
+                await asyncio.sleep(2)
+                
+                # 检查同步状态
+                result = subprocess.run(
+                    ['timedatectl', 'show-timesync', '--property=ServerName'],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    self.time_offset = 0.0  # systemd同步后偏移为0
+                    self.last_sync = time.time()
+                    self.logger.info("systemd-timesyncd时间同步成功")
+                    return True
+                    
+        except Exception as e:
+            self.logger.warning(f"systemd时间同步失败: {e}")
+        
         return False
     
     async def get_ntp_time(self, server: str, timeout: float = 5.0) -> Optional[float]:

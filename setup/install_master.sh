@@ -19,12 +19,26 @@ apt install -y python3 python3-pip python3-venv
 
 # 安装系统依赖
 echo "安装系统依赖..."
-apt install -y git curl wget ntp
+apt install -y git curl wget
 
-# 配置NTP时间同步
-echo "配置NTP时间同步..."
-systemctl enable ntp
-systemctl start ntp
+# 配置时间同步服务
+echo "配置时间同步..."
+# 使用systemd-timesyncd替代ntp
+systemctl enable systemd-timesyncd
+systemctl start systemd-timesyncd
+
+# 配置时间同步服务器
+cat > /etc/systemd/timesyncd.conf << EOF
+[Time]
+NTP=pool.ntp.org time.nist.gov time.google.com cn.pool.ntp.org
+FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
+RootDistanceMaxSec=5
+PollIntervalMinSec=32
+PollIntervalMaxSec=2048
+EOF
+
+# 重启时间同步服务
+systemctl restart systemd-timesyncd
 
 # 创建项目目录
 PROJECT_DIR="/opt/camera_array"
@@ -61,7 +75,7 @@ echo "创建systemd服务..."
 cat > /etc/systemd/system/camera-master.service << EOF
 [Unit]
 Description=Camera Array Master Controller
-After=network.target ntp.service
+After=network.target systemd-timesyncd.service
 
 [Service]
 Type=simple

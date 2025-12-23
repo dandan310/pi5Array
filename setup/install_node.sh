@@ -22,18 +22,28 @@ echo "安装摄像头依赖..."
 apt install -y python3-picamera2 python3-libcamera python3-kms++
 apt install -y python3-prctl libatlas-base-dev ffmpeg
 
-# 安装NTP时间同步
-echo "安装NTP时间同步..."
-apt install -y ntp
+# 安装时间同步服务
+echo "配置时间同步..."
+# 使用systemd-timesyncd替代ntp
+systemctl enable systemd-timesyncd
+systemctl start systemd-timesyncd
+
+# 配置时间同步服务器
+cat > /etc/systemd/timesyncd.conf << EOF
+[Time]
+NTP=pool.ntp.org time.nist.gov time.google.com cn.pool.ntp.org
+FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org
+RootDistanceMaxSec=5
+PollIntervalMinSec=32
+PollIntervalMaxSec=2048
+EOF
+
+# 重启时间同步服务
+systemctl restart systemd-timesyncd
 
 # 启用摄像头
 echo "启用摄像头..."
 raspi-config nonint do_camera 0
-
-# 配置NTP时间同步
-echo "配置NTP时间同步..."
-systemctl enable ntp
-systemctl start ntp
 
 # 创建项目目录
 PROJECT_DIR="/opt/camera_node"
@@ -67,7 +77,7 @@ echo "创建systemd服务..."
 cat > /etc/systemd/system/camera-node.service << EOF
 [Unit]
 Description=Camera Array Node (Auto ID)
-After=network.target ntp.service
+After=network.target systemd-timesyncd.service
 
 [Service]
 Type=simple
